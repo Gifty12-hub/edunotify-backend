@@ -1,5 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const School = require("./models/School");
 const User = require("./models/User");
@@ -30,7 +31,7 @@ async function seed() {
       school: school._id,
       fullName: "Ama Mensah",
       email: "ama@kasoademo.edu.gh",
-      passwordHash: "placeholder", // real hashing comes with the auth setup later
+      passwordHash: await bcrypt.hash(process.env.SEED_PASSWORD || "ChangeMe123!", 12),
       role: "teacher",
     });
 
@@ -52,6 +53,8 @@ async function seed() {
     });
 
     console.log("Seed complete. Use these IDs for testing in Postman:\n");
+    console.log("Login email: ama@kasoademo.edu.gh");
+    console.log("Login password: " + (process.env.SEED_PASSWORD || "ChangeMe123!"));
     console.log("studentId:", student._id.toString());
     console.log("sentBy (teacher/user id):", teacher._id.toString());
 

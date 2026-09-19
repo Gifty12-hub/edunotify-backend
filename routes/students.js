@@ -15,7 +15,10 @@ router.post("/", authorize("admin", "teacher"), async (req, res, next) => {
   try {
     const { fullName, className, parentId, parent } = req.body;
     if (!fullName || !className || (!parentId && !parent)) return res.status(400).json({ error: "fullName, className, and parent details are required" });
-    const parentRecord = parentId ? await Parent.findById(parentId) : await Parent.create(parent);
+    const schoolParentIds = await Student.distinct("parent", { school: req.user.school });
+    const parentRecord = parentId
+      ? await Parent.findOne({ _id: { $in: schoolParentIds, $eq: parentId } })
+      : await Parent.create(parent);
     if (!parentRecord) return res.status(404).json({ error: "Parent not found" });
     const student = await Student.create({ school: req.user.school, fullName, className, parent: parentRecord._id });
     res.status(201).json({ student: await student.populate("parent") });
