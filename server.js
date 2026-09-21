@@ -19,18 +19,26 @@ app.use(cors());
 // Allows the server to read JSON in request bodies
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
 // A simple test route to confirm the server is alive
 app.get("/", (req, res) => {
   res.send("EduNotify backend is running");
 });
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.get("/api", (req, res) => {
+  res.json({
+    name: "EduNotify API",
+    endpoints: {
+      login: "POST /api/auth/login",
+      register: "POST /api/auth/register",
+      currentUser: "GET /api/auth/me",
+      students: "/api/students",
+      parents: "/api/parents",
+      notifications: "/api/notifications",
+      school: "GET /api/school",
+    },
+  });
+});
 app.use("/api/auth", authRoute);
 app.use("/api/students", studentsRoute);
 app.use("/api/parents", parentsRoute);
@@ -50,7 +58,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Start the server and keep it running
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+async function startServer() {
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured");
+  }
+
+  await mongoose.connect(process.env.MONGODB_URI);
+  console.log("MongoDB connected");
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+startServer().catch((err) => {
+  console.error("Unable to start server:", err.message);
+  process.exit(1);
 });
