@@ -9,6 +9,11 @@ const Student = require("./models/Student");
 
 async function seed() {
   try {
+    const testParentPhone = process.env.TEST_PARENT_PHONE;
+    if (!testParentPhone) {
+      throw new Error("TEST_PARENT_PHONE is not configured; set it to the exact Africa's Talking simulator number");
+    }
+
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB connected, seeding data...");
 
@@ -37,9 +42,7 @@ async function seed() {
 
     const parent = await Parent.create({
       fullName: "Kwame Owusu",
-      // Replace this with the phone number you registered in the
-      // Africa's Talking sandbox simulator
-      phone: "+233200000000",
+      phone: testParentPhone,
       email: "kwame@example.com",
       preferredLanguage: "en",
       preferredChannel: "sms",
