@@ -20,9 +20,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Set only for parent logins. Points at the parent contact record.
+    parentProfile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Parent",
+      unique: true,
+      sparse: true,
+    },
     role: {
       type: String,
-      enum: ["admin", "teacher"],
+      enum: ["admin", "teacher", "parent"],
       default: "teacher",
     },
   },

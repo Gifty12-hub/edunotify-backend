@@ -55,9 +55,19 @@ async function seed() {
       parent: parent._id,
     });
 
+    await User.create({
+      school: school._id,
+      fullName: parent.fullName,
+      email: parent.email,
+      passwordHash: await bcrypt.hash(process.env.SEED_PASSWORD || "ChangeMe123!", 12),
+      role: "parent",
+      parentProfile: parent._id,
+    });
+
     console.log("Seed complete. Use these IDs for testing in Postman:\n");
     console.log("Login email: ama@kasoademo.edu.gh");
     console.log("Login password: " + (process.env.SEED_PASSWORD || "ChangeMe123!"));
+    console.log("Parent login email: " + parent.email + " (same password)");
     console.log("studentId:", student._id.toString());
     console.log("sentBy (teacher/user id):", teacher._id.toString());
 

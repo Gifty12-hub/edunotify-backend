@@ -7,14 +7,22 @@ const notificationsRoute = require("./routes/notifications");
 const authRoute = require("./routes/auth");
 const studentsRoute = require("./routes/students");
 const parentsRoute = require("./routes/parents");
+const resultsRoute = require("./routes/results");
+const statsRoute = require("./routes/stats");
+const portalRoute = require("./routes/portal");
+const { loginLimiter, registerLimiter, apiLimiter } = require("./middleware/limits");
 const School = require("./models/School");
 const { authenticate } = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Behind a host proxy (Render, Railway, Heroku) set TRUST_PROXY=1 so rate
+// limits use the real visitor address and not the proxy address.
+if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+
 // Allows requests from your frontend (running on a different port)
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true }));
 
 // Allows the server to read JSON in request bodies
 app.use(express.json());
@@ -34,15 +42,24 @@ app.get("/api", (req, res) => {
       currentUser: "GET /api/auth/me",
       students: "/api/students",
       parents: "/api/parents",
-      notifications: "/api/notifications",
+      notifications: "/api/notifications (POST, POST /broadcast)",
+      results: "/api/results (GET, POST /bulk, POST /notify)",
+      stats: "GET /api/stats",
+      parentPortal: "GET /api/portal/children, GET /api/portal/messages",
       school: "GET /api/school",
     },
   });
 });
+app.use("/api", apiLimiter);
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/register", registerLimiter);
 app.use("/api/auth", authRoute);
+app.use("/api/portal", portalRoute);
 app.use("/api/students", studentsRoute);
 app.use("/api/parents", parentsRoute);
 app.use("/api/notifications", notificationsRoute);
+app.use("/api/results", resultsRoute);
+app.use("/api/stats", statsRoute);
 app.get("/api/school", authenticate, async (req, res, next) => {
   try {
     const school = await School.findById(req.user.school);

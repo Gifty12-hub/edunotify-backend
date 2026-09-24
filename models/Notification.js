@@ -31,6 +31,15 @@ const notificationSchema = new mongoose.Schema(
       enum: ["sms", "whatsapp", "email"],
       required: true,
     },
+    kind: {
+      type: String,
+      enum: ["message", "results", "broadcast"],
+      default: "message",
+    },
+    language: { type: String },
+    aiGenerated: { type: Boolean, default: false },
+    providerId: { type: String },
+    error: { type: String },
     status: {
       type: String,
       enum: ["pending", "sent", "failed"],

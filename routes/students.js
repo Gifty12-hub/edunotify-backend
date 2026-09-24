@@ -4,7 +4,9 @@ const Parent = require("../models/Parent");
 const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
-router.use(authenticate);
+const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
+const PARENT_FIELDS = ["fullName", "phone", "email", "preferredLanguage", "preferredChannel"];
+router.use(authenticate, authorize("admin", "teacher"));
 
 router.get("/", async (req, res, next) => {
   try { res.json({ students: await Student.find({ school: req.user.school }).populate("parent").sort("fullName") }); }
@@ -18,7 +20,7 @@ router.post("/", authorize("admin", "teacher"), async (req, res, next) => {
     const schoolParentIds = await Student.distinct("parent", { school: req.user.school });
     const parentRecord = parentId
       ? await Parent.findOne({ _id: { $in: schoolParentIds, $eq: parentId } })
-      : await Parent.create(parent);
+      : await Parent.create(pick(parent, PARENT_FIELDS));
     if (!parentRecord) return res.status(404).json({ error: "Parent not found" });
     const student = await Student.create({ school: req.user.school, fullName, className, parent: parentRecord._id });
     res.status(201).json({ student: await student.populate("parent") });
@@ -35,7 +37,7 @@ router.get("/:id", async (req, res, next) => {
 
 router.patch("/:id", authorize("admin", "teacher"), async (req, res, next) => {
   try {
-    const student = await Student.findOneAndUpdate({ _id: req.params.id, school: req.user.school }, req.body, { new: true, runValidators: true }).populate("parent");
+    const student = await Student.findOneAndUpdate({ _id: req.params.id, school: req.user.school }, pick(req.body, ["fullName", "className"]), { new: true, runValidators: true }).populate("parent");
     if (!student) return res.status(404).json({ error: "Student not found" });
     res.json({ student });
   } catch (err) { next(err); }
