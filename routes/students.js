@@ -5,7 +5,7 @@ const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
 const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
-const PARENT_FIELDS = ["fullName", "phone", "email", "preferredLanguage", "preferredChannel"];
+const PARENT_FIELDS = ["fullName", "phone", "email", "preferredLanguage", "preferredChannel", "sendListenLink"];
 router.use(authenticate, authorize("admin", "teacher"));
 
 router.get("/", async (req, res, next) => {

@@ -10,7 +10,9 @@ const parentsRoute = require("./routes/parents");
 const resultsRoute = require("./routes/results");
 const statsRoute = require("./routes/stats");
 const portalRoute = require("./routes/portal");
-const { loginLimiter, registerLimiter, apiLimiter } = require("./middleware/limits");
+const voiceRoute = require("./routes/voice");
+const listenRoute = require("./routes/listen");
+const { loginLimiter, registerLimiter, apiLimiter, listenLimiter } = require("./middleware/limits");
 const School = require("./models/School");
 const { authenticate } = require("./middleware/auth");
 
@@ -22,7 +24,10 @@ const PORT = process.env.PORT || 5000;
 if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
 
 // Allows requests from your frontend (running on a different port)
-app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true,
+  exposedHeaders: ["X-Spoken-Text", "X-Spoken-Language"],
+}));
 
 // Allows the server to read JSON in request bodies
 app.use(express.json());
@@ -55,6 +60,8 @@ app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth/register", registerLimiter);
 app.use("/api/auth", authRoute);
 app.use("/api/portal", portalRoute);
+app.use("/api/voice", voiceRoute);
+app.use("/listen", listenLimiter, listenRoute);
 app.use("/api/students", studentsRoute);
 app.use("/api/parents", parentsRoute);
 app.use("/api/notifications", notificationsRoute);

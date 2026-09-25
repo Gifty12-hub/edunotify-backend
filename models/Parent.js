@@ -23,6 +23,11 @@ const parentSchema = new mongoose.Schema(
       enum: ["sms", "whatsapp", "email"],
       default: "sms",
     },
+    // Adds a web link to each message so the parent can hear it read aloud.
+    sendListenLink: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

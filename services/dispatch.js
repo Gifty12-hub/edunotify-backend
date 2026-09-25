@@ -1,5 +1,6 @@
 const Notification = require("../models/Notification");
 const { deliverToParent } = require("./notify");
+const { buildListenLink } = require("./listenLink");
 
 /**
  * Logs a notification as "pending", tries to deliver it, then records
@@ -20,8 +21,12 @@ async function sendAndLog({ student, parent, sentBy, message, kind = "message", 
     status: "pending",
   });
 
+  // Parents who cannot read get a link that plays the message aloud.
+  const link = parent.sendListenLink ? buildListenLink(notification._id) : null;
+  const textToSend = link ? `${message}\nListen: ${link}` : message;
+
   try {
-    const out = await deliverToParent(parent, { message, subject });
+    const out = await deliverToParent(parent, { message: textToSend, subject });
     notification.channel = out.channel;
     notification.providerId = out.providerId;
     notification.error = out.note;

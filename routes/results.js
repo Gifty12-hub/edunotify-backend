@@ -1,6 +1,6 @@
 const express = require("express");
 const Student = require("../models/Student");
-const Result = require("../models/Result");
+const Result = require("../models/Results");
 const School = require("../models/School");
 const { authenticate, authorize } = require("../middleware/auth");
 const { sendAndLog } = require("../services/dispatch");

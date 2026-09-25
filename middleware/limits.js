@@ -37,4 +37,13 @@ const apiLimiter = rateLimit({
   message: tooMany("Too many requests. Slow down and try again."),
 });
 
-module.exports = { loginLimiter, registerLimiter, sendLimiter, apiLimiter };
+// Public listen links create audio, which costs money, so keep them limited.
+const listenLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 40,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: tooMany("Too many requests. Try again in a few minutes."),
+});
+
+module.exports = { loginLimiter, registerLimiter, sendLimiter, apiLimiter, listenLimiter };
