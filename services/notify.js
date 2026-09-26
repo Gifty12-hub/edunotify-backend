@@ -2,7 +2,7 @@
 // which picks the parent's preferred channel and falls back to SMS.
 const nodemailer = require("nodemailer");
 
-// Africa's Talking needs international format, e.g. +233244000000.
+// Keep Ghanaian numbers in international format, e.g. +233244000000.
 function normalizePhone(phone) {
   const cleaned = String(phone).replace(/[^\d+]/g, "");
   if (cleaned.startsWith("+")) return cleaned;
