@@ -12,6 +12,7 @@ const statsRoute = require("./routes/stats");
 const portalRoute = require("./routes/portal");
 const voiceRoute = require("./routes/voice");
 const listenRoute = require("./routes/listen");
+const contactRoute = require("./routes/contact");
 const { loginLimiter, registerLimiter, apiLimiter, listenLimiter } = require("./middleware/limits");
 const School = require("./models/School");
 const { authenticate } = require("./middleware/auth");
@@ -44,6 +45,7 @@ app.get("/api", (req, res) => {
     endpoints: {
       login: "POST /api/auth/login",
       register: "POST /api/auth/register",
+      contact: "POST /api/contact",
       currentUser: "GET /api/auth/me",
       students: "/api/students",
       parents: "/api/parents",
@@ -59,6 +61,7 @@ app.use("/api", apiLimiter);
 app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth/register", registerLimiter);
 app.use("/api/auth", authRoute);
+app.use("/api/contact", contactRoute);
 app.use("/api/portal", portalRoute);
 app.use("/api/voice", voiceRoute);
 app.use("/listen", listenLimiter, listenRoute);
