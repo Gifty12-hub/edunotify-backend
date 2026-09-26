@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -10,10 +10,8 @@ const parentsRoute = require("./routes/parents");
 const resultsRoute = require("./routes/results");
 const statsRoute = require("./routes/stats");
 const portalRoute = require("./routes/portal");
-const voiceRoute = require("./routes/voice");
-const listenRoute = require("./routes/listen");
 const contactRoute = require("./routes/contact");
-const { loginLimiter, registerLimiter, apiLimiter, listenLimiter } = require("./middleware/limits");
+const { loginLimiter, registerLimiter, apiLimiter } = require("./middleware/limits");
 const School = require("./models/School");
 const { authenticate } = require("./middleware/auth");
 
@@ -63,8 +61,6 @@ app.use("/api/auth/register", registerLimiter);
 app.use("/api/auth", authRoute);
 app.use("/api/contact", contactRoute);
 app.use("/api/portal", portalRoute);
-app.use("/api/voice", voiceRoute);
-app.use("/listen", listenLimiter, listenRoute);
 app.use("/api/students", studentsRoute);
 app.use("/api/parents", parentsRoute);
 app.use("/api/notifications", notificationsRoute);

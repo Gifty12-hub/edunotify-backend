@@ -1,6 +1,5 @@
 // Delivery layer. One function per channel, plus deliverToParent()
 // which picks the parent's preferred channel and falls back to SMS.
-const africastalking = require("africastalking");
 const nodemailer = require("nodemailer");
 
 // Africa's Talking needs international format, e.g. +233244000000.
@@ -12,30 +11,35 @@ function normalizePhone(phone) {
   return `+233${cleaned}`;
 }
 
-let smsClient;
-function getSms() {
-  if (!process.env.AT_API_KEY || !process.env.AT_USERNAME) {
-    throw new Error("SMS is not configured (AT_API_KEY / AT_USERNAME)");
-  }
-  if (!smsClient) {
-    smsClient = africastalking({
-      apiKey: process.env.AT_API_KEY,
-      username: process.env.AT_USERNAME,
-    }).SMS;
-  }
-  return smsClient;
-}
-
 async function sendSms({ phone, message }) {
-  const options = { to: [normalizePhone(phone)], message };
-  if (process.env.AT_SENDER_ID) options.from = process.env.AT_SENDER_ID;
-  const result = await getSms().send(options);
-  const recipient = result?.SMSMessageData?.Recipients?.[0];
-  // Africa's Talking status codes 100, 101 and 102 mean processed, sent, queued.
-  if (!recipient || ![100, 101, 102].includes(recipient.statusCode)) {
-    throw new Error(`SMS failed: ${recipient?.status || result?.SMSMessageData?.Message || "no recipient returned"}`);
+  const apiKey = process.env.MNOTIFY_API_KEY;
+  const sender = process.env.MNOTIFY_SENDER_ID;
+  if (!apiKey || !sender) throw new Error("SMS is not configured (MNOTIFY_API_KEY / MNOTIFY_SENDER_ID)");
+
+  const recipient = normalizePhone(phone).replace(/^\+/, "");
+  const body = { recipient: [recipient], sender, message };
+
+  let res;
+  let result;
+  try {
+    res = await fetch(`https://api.mnotify.com/api/sms/quick?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+    result = await res.json().catch(() => ({}));
+  } catch (err) {
+    const detail = err.name === "TimeoutError" ? "request timed out" : err.message;
+    throw new Error(`SMS provider error: ${detail}`);
   }
-  return { providerId: recipient.messageId };
+
+  const status = String(result?.status || "").toLowerCase();
+  if (!res.ok || (status && !["success", "successful", "sent", "queued"].includes(status))) {
+    const detail = result?.message || result?.error || result?.status || `HTTP ${res.status}`;
+    throw new Error(`SMS failed: ${detail}`);
+  }
+  return { providerId: result?.message_id || result?.messageId || result?.id };
 }
 
 let mailer;
